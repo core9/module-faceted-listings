@@ -57,6 +57,9 @@ public class ListingDataHandlerImpl implements ListingDataHandler<ContentDataHan
 		return new DataHandler<ContentDataHandlerConfig>(){
 
 			
+			/**
+			 * TODO: High complexity, simplify
+			 */
 			@Override
 			public Map<String, Object> handle(Request req) {
 				Map<String,Object> result = new HashMap<String, Object>(1);
@@ -80,7 +83,8 @@ public class ListingDataHandlerImpl implements ListingDataHandler<ContentDataHan
 							}
 						}
 						VirtualHost vhost = req.getVirtualHost();
-						List<Map<String,Object>> products = database.getMultipleResults(vhost.getContext(CTX_DATABASE), vhost.getContext(CTX_PREFIX) + "products", builder.build());
+						Map<String,Object> productsQuery = builder.build();
+						List<Map<String,Object>> products = database.getMultipleResults(vhost.getContext(CTX_DATABASE), vhost.getContext(CTX_PREFIX) + "products", productsQuery);
 						result.put("products", products);
 						result.put("content", listing);
 						result.put("facets", getFacet(listing, params));

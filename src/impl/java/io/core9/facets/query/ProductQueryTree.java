@@ -12,16 +12,17 @@ public class ProductQueryTree {
 	public void add(String type, String namespace, String value, boolean mandatory) {
 		Type entryType = Type.valueOf(type.toUpperCase());
 		if(tree.containsKey(entryType)) {
-			if(!mandatory || tree.get(entryType) instanceof MandatoryProductTypedOption) {
-				tree.get(entryType).add(namespace, value);
+			ProductTypedOption option = tree.get(entryType);
+			if(!mandatory || option instanceof MandatoryProductTypedOption) {
+				option.add(namespace, value);
 			} else {
-				tree.put(entryType, new MandatoryProductTypedOption(namespace, value));
+				tree.put(entryType, new MandatoryProductTypedOption().parseFrom(option).add(namespace, value));
 			}
 		} else {
 			if(mandatory) {
-				tree.put(entryType, new MandatoryProductTypedOption(namespace, value));
+				tree.put(entryType, new MandatoryProductTypedOption().add(namespace, value));
 			} else {
-				tree.put(entryType, new ProductTypedOption(namespace, value));
+				tree.put(entryType, new NormalProductTypedOption(namespace, value));
 			}
 		}
 	}

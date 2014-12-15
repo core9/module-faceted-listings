@@ -5,25 +5,26 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-public class ProductTypedOption {
-	
-	private Map<String, List<String>> tree = new TreeMap<String, List<String>>();
+public abstract class ProductTypedOption {
 
-	public ProductTypedOption(String namespace, String value) {
-		this.add(namespace, value);
-	}
+	protected Map<String, List<String>> tree = new TreeMap<String, List<String>>();
 
 	public Map<String,Object> build(QueryBuilder builder) {
 		return builder.build(tree);
 	}
 
-	public void add(String namespace, String value) {
+	public ProductTypedOption add(String namespace, String value) {
 		List<String> items = tree.get(namespace);
 		if(items == null) {
 			items = new ArrayList<String>();
 			tree.put(namespace, items);
 		}
 		items.add(value);
+		return this;
 	}
-
+	
+	public ProductTypedOption parseFrom(ProductTypedOption original) {
+		this.tree = original.tree;
+		return this;
+	}
 }
