@@ -4,18 +4,25 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
 
 public class ProductQueryTree {
 	
 	private Map<Type, ProductTypedOption> tree = new HashMap<Type, ProductTypedOption>();
 	
-	public void add(String type, String namespace, String value) {
+	public void add(String type, String namespace, String value, boolean mandatory) {
 		Type entryType = Type.valueOf(type.toUpperCase());
 		if(tree.containsKey(entryType)) {
-			tree.get(entryType).add(namespace, value);
+			if(!mandatory || tree.get(entryType) instanceof MandatoryProductTypedOption) {
+				tree.get(entryType).add(namespace, value);
+			} else {
+				tree.put(entryType, new MandatoryProductTypedOption(namespace, value));
+			}
 		} else {
-			tree.put(entryType, new ProductTypedOption(namespace, value));
+			if(mandatory) {
+				tree.put(entryType, new MandatoryProductTypedOption(namespace, value));
+			} else {
+				tree.put(entryType, new ProductTypedOption(namespace, value));
+			}
 		}
 	}
 
@@ -23,7 +30,7 @@ public class ProductQueryTree {
 		PROPERTIES, TEXT, FIELD
 	}
 
-	public DBObject build() {
+	public BasicDBObject build() {
 		BasicDBObject query = new BasicDBObject();
 		for(Map.Entry<Type, ProductTypedOption> entry : tree.entrySet()) {
 			switch(entry.getKey()) {

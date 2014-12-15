@@ -1,11 +1,13 @@
 package io.core9.facets.query;
 
-import com.mongodb.DBObject;
+import java.util.Map;
 
 public interface ProductQueryBuilder {
 
-	DBObject build();
+	Map<String,Object> build();
 	
 	ProductQueryBuilder add(String queryString);
+
+	ProductQueryBuilder addAndClause(String string);
 	
 }

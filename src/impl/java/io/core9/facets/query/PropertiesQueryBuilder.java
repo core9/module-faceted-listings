@@ -32,13 +32,13 @@ public class PropertiesQueryBuilder implements QueryBuilder {
 	}
 
 	private List<Map<String, Object>> explode(String namespace, List<String> values) {
-		List<Map<String,Object>> ors = new ArrayList<Map<String,Object>>();
+		List<Map<String,Object>> result = new ArrayList<Map<String,Object>>();
 		for(String value : values) {
 			Map<String,Object> query = new HashMap<String,Object>();
 			query.put(PROPERTIES_KEY, namespace + SEPARATOR + value);
-			ors.add(query);
+			result.add(query);
 		}
-		return ors;
+		return result;
 	}
 
 }

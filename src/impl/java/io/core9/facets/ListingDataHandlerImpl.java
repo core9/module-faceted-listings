@@ -1,5 +1,7 @@
 package io.core9.facets;
 
+import io.core9.facets.query.ListingQueryBuilder;
+import io.core9.facets.query.ProductQueryBuilder;
 import io.core9.plugin.database.mongodb.MongoDatabase;
 import io.core9.plugin.server.VirtualHost;
 import io.core9.plugin.server.request.Request;
@@ -10,7 +12,6 @@ import io.core9.plugin.widgets.datahandler.factories.ContentDataHandlerConfig;
 import io.core9.plugin.widgets.datahandler.factories.CustomGlobal;
 import io.core9.plugin.widgets.datahandler.factories.CustomVariable;
 
-import java.util.ArrayList;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
@@ -26,12 +27,15 @@ import com.mongodb.DBObject;
 @PluginImplementation
 public class ListingDataHandlerImpl implements ListingDataHandler<ContentDataHandlerConfig> {
 	
-	private static final String NAME = "Fopshop-Listing";
+	private static final String NAME = "FacetedListing";
 	private static final String CTX_DATABASE = "database";
 	private static final String CTX_PREFIX   = "prefix";
 	
 	@InjectPlugin
 	private MongoDatabase database;
+	
+	@InjectPlugin
+	private ListingQueryBuilder queryBuilder;
 	
 	@InjectPlugin
 	private ContentDataHandler<ContentDataHandlerConfig> contentHandlerFactory;
@@ -61,13 +65,23 @@ public class ListingDataHandlerImpl implements ListingDataHandler<ContentDataHan
 					if(params.containsKey("clear")) {
 						redirectToClearedParameters(req, params);
 					} else {
+						ProductQueryBuilder builder = queryBuilder.start();
 						DBObject listing = getListingPageObject(req.getVirtualHost(), req);
+						@SuppressWarnings("unchecked")
 						List<String> query = (List<String>) listing.get("query");
-						if(query == null) {
-							query = new ArrayList<String>();
+						if(query != null) {
+							for(String queryString : query) {
+								builder.add(queryString);
+							}
 						}
-						
-						result.put("products", listing.removeField("products"));
+						for(Map.Entry<String, Deque<String>> param : params.entrySet()) {
+							for(String value : param.getValue()) {
+								builder.addAndClause(param.getKey() + ":" + value);
+							}
+						}
+						VirtualHost vhost = req.getVirtualHost();
+						List<Map<String,Object>> products = database.getMultipleResults(vhost.getContext(CTX_DATABASE), vhost.getContext(CTX_PREFIX) + "products", builder.build());
+						result.put("products", products);
 						result.put("content", listing);
 						result.put("facets", getFacet(listing, params));
 						putCustomVariablesOnContext(req, listing);
