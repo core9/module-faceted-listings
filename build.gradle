@@ -21,5 +21,6 @@ task publishBintray (type: org._10ne.gradle.rest.RestTask, dependsOn: bintrayUpl
 
 dependencies {
 	apiCompile 'io.core9:core-api:1.0.+'
+	apiCompile 'io.core9:module-database-mongodb-api:1.0.+'
 	apiCompile 'io.core9:module-widgets-api:1.0.+'
 }
