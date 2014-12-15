@@ -13,14 +13,18 @@ public class ProductQueryTree {
 		Type entryType = Type.valueOf(type.toUpperCase());
 		if(tree.containsKey(entryType)) {
 			ProductTypedOption option = tree.get(entryType);
-			if(!mandatory || option instanceof MandatoryProductTypedOption) {
+			if(!mandatory) {
 				option.add(namespace, value);
 			} else {
-				tree.put(entryType, new MandatoryProductTypedOption().parseFrom(option).add(namespace, value));
+				if(option instanceof MandatoryProductTypedOption) {
+					((MandatoryProductTypedOption) option).addMandatory(namespace, value);
+				} else {
+					tree.put(entryType, new MandatoryProductTypedOption().parseFrom(option).addMandatory(namespace, value));
+				}
 			}
 		} else {
 			if(mandatory) {
-				tree.put(entryType, new MandatoryProductTypedOption().add(namespace, value));
+				tree.put(entryType, new MandatoryProductTypedOption().addMandatory(namespace, value));
 			} else {
 				tree.put(entryType, new NormalProductTypedOption(namespace, value));
 			}

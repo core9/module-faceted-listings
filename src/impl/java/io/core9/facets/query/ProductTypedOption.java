@@ -23,8 +23,4 @@ public abstract class ProductTypedOption {
 		return this;
 	}
 	
-	public ProductTypedOption parseFrom(ProductTypedOption original) {
-		this.tree = original.tree;
-		return this;
-	}
 }
