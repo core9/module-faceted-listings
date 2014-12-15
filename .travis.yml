@@ -1,0 +1,8 @@
+language: java
+jdk:
+- oraclejdk8
+env:
+  global:
+    - TERM=dumb
+install: 
+  - "./gradlew clean test build publish publishBintray"
