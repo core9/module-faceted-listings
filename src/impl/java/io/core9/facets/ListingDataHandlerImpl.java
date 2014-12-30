@@ -1,7 +1,5 @@
 package io.core9.facets;
 
-import io.core9.facets.query.ListingQueryBuilder;
-import io.core9.facets.query.ProductQueryBuilder;
 import io.core9.plugin.database.mongodb.MongoDatabase;
 import io.core9.plugin.server.VirtualHost;
 import io.core9.plugin.server.request.Request;
@@ -12,6 +10,7 @@ import io.core9.plugin.widgets.datahandler.factories.ContentDataHandlerConfig;
 import io.core9.plugin.widgets.datahandler.factories.CustomGlobal;
 import io.core9.plugin.widgets.datahandler.factories.CustomVariable;
 
+import java.util.ArrayList;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
@@ -33,10 +32,7 @@ public class ListingDataHandlerImpl implements ListingDataHandler<ContentDataHan
 	
 	@InjectPlugin
 	private MongoDatabase database;
-	
-	@InjectPlugin
-	private ListingQueryBuilder queryBuilder;
-	
+		
 	@InjectPlugin
 	private ContentDataHandler<ContentDataHandlerConfig> contentHandlerFactory;
 
@@ -56,48 +52,71 @@ public class ListingDataHandlerImpl implements ListingDataHandler<ContentDataHan
 		
 		return new DataHandler<ContentDataHandlerConfig>(){
 
-			
-			/**
-			 * TODO: High complexity, simplify
-			 */
+			@SuppressWarnings("unchecked")
 			@Override
 			public Map<String, Object> handle(Request req) {
 				Map<String,Object> result = new HashMap<String, Object>(1);
 				Map<String,Deque<String>> params = req.getQueryParams();
+				int page = 1;
 				if(params.size() > 0) {
 					if(params.containsKey("clear")) {
 						redirectToClearedParameters(req, params);
-					} else {
-						ProductQueryBuilder builder = queryBuilder.start();
-						DBObject listing = getListingPageObject(req.getVirtualHost(), req);
-						@SuppressWarnings("unchecked")
-						List<String> query = (List<String>) listing.get("query");
-						if(query != null) {
-							for(String queryString : query) {
-								builder.add(queryString);
-							}
-						}
-						for(Map.Entry<String, Deque<String>> param : params.entrySet()) {
-							for(String value : param.getValue()) {
-								builder.addAndClause(param.getKey() + ":" + value);
-							}
-						}
-						VirtualHost vhost = req.getVirtualHost();
-						Map<String,Object> productsQuery = builder.build();
-						List<Map<String,Object>> products = database.getMultipleResults(vhost.getContext(CTX_DATABASE), vhost.getContext(CTX_PREFIX) + "products", productsQuery);
-						result.put("products", products);
-						result.put("content", listing);
-						result.put("facets", getFacet(listing, params));
-						putCustomVariablesOnContext(req, listing);
+					} else if(params.containsKey("page")) {
+						page = Integer.parseInt(params.remove("page").getFirst());
 					}
-				} else {
-					DBObject listing = getListingPageObject(req.getVirtualHost(), req);
-					result.put("products", listing.removeField("products"));
-					result.put("content", listing);
-					result.put("facets", getFacet(listing, params));
-					putCustomVariablesOnContext(req, listing);
 				}
+				
+				DBObject listing = getListingPageObject(req.getVirtualHost(), req);
+				List<String> andProperties = new ArrayList<String>();
+				Map<String, Deque<String>> orProperties = new HashMap<String, Deque<String>>();
+				for(Map.Entry<String, Deque<String>> param : params.entrySet()) {
+					if(param.getValue().size() > 1) {
+						orProperties.put(param.getKey(), param.getValue());
+					} else {
+						andProperties.add(param.getKey().replaceFirst("properties:", "") + ":" + param.getValue().getFirst());
+					}
+				}
+				int perPage = config.getPager().getResultsPerPage();
+				int start = ((page - 1) * perPage) + 1;
+				int end  = page  * perPage;
+				int index = 0;
+				boolean moreAvailable = false;
+				List<DBObject> resultProducts = new ArrayList<DBObject>();
+				for(DBObject product : (List<DBObject>) listing.removeField("products")) {
+					List<String> productProperties = (List<String>) product.get("properties");
+					if(productProperties != null && productProperties.containsAll(andProperties) && containsOrClause(productProperties, orProperties) && ++index >= start) {
+						resultProducts.add(product);
+						if(index == end) {
+							moreAvailable = true;
+							break;
+						}
+					}
+				}				
+				result.put("products", resultProducts);
+				result.put("content", listing);
+				result.put("facets", getFacet(listing, params));
+				result.put("more", moreAvailable);
+				result.put("page", page);
+				putCustomVariablesOnContext(req, listing);
 				return result;
+			}
+			
+			private boolean containsOrClause(List<String> properties, Map<String, Deque<String>> ors) {
+				for(Map.Entry<String, Deque<String>> or : ors.entrySet()) {
+					if(!containsOrClause(properties, or.getKey().replace("properties:", ""), or.getValue())) {
+						return false;
+					}
+				}
+				return true;
+			}
+			
+			private boolean containsOrClause(List<String> properties, String type, Deque<String> values) {
+				for(String value : values) {
+					if(properties.contains(type + ":" + value)) {
+						return true;
+					}
+				}
+				return false;
 			}
 
 			/**
