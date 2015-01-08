@@ -83,17 +83,18 @@ public class ListingDataHandlerImpl implements ListingDataHandler<ContentDataHan
 				List<DBObject> resultProducts = new ArrayList<DBObject>();
 				for(DBObject product : (List<DBObject>) listing.removeField("products")) {
 					List<String> productProperties = (List<String>) product.get("properties");
-					if(productProperties != null && productProperties.containsAll(andProperties) && containsOrClause(productProperties, orProperties) && ++index >= start) {
-						resultProducts.add(product);
-						if(index == end) {
-							break;
+					if(productProperties != null 
+							&& productProperties.containsAll(andProperties) 
+							&& containsOrClause(productProperties, orProperties)) {
+						if(++index >= start && index <= end) { 
+							resultProducts.add(product);
 						}
 					}
 				}				
 				result.put("products", resultProducts);
 				result.put("content", listing);
 				result.put("facets", getFacet(listing, params));
-				result.put("total", config.getPager().retrieveNumberOfPages((int) listing.get("count")));
+				result.put("total", config.getPager().retrieveNumberOfPages(index));
 				result.put("page", page);
 				putCustomVariablesOnContext(req, listing);
 				return result;
