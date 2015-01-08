@@ -80,14 +80,12 @@ public class ListingDataHandlerImpl implements ListingDataHandler<ContentDataHan
 				int start = ((page - 1) * perPage) + 1;
 				int end  = page  * perPage;
 				int index = 0;
-				boolean moreAvailable = false;
 				List<DBObject> resultProducts = new ArrayList<DBObject>();
 				for(DBObject product : (List<DBObject>) listing.removeField("products")) {
 					List<String> productProperties = (List<String>) product.get("properties");
 					if(productProperties != null && productProperties.containsAll(andProperties) && containsOrClause(productProperties, orProperties) && ++index >= start) {
 						resultProducts.add(product);
 						if(index == end) {
-							moreAvailable = true;
 							break;
 						}
 					}
@@ -95,7 +93,7 @@ public class ListingDataHandlerImpl implements ListingDataHandler<ContentDataHan
 				result.put("products", resultProducts);
 				result.put("content", listing);
 				result.put("facets", getFacet(listing, params));
-				result.put("more", moreAvailable);
+				result.put("total", config.getPager().retrieveNumberOfPages((int) listing.get("count")));
 				result.put("page", page);
 				putCustomVariablesOnContext(req, listing);
 				return result;
