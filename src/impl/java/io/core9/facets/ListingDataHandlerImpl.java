@@ -146,7 +146,7 @@ public class ListingDataHandlerImpl implements ListingDataHandler<ContentDataHan
 			}
 
 			protected DBObject getListingPageObject(VirtualHost vhost, Request req) {
-				DBCollection coll = database.getCollection(vhost.getContext(CTX_DATABASE), vhost.getContext(CTX_PREFIX) + config.getContentType());
+				DBCollection coll = database.getCollection((String) vhost.getContext(CTX_DATABASE), vhost.getContext(CTX_PREFIX) + config.getContentType());
 				Map<String,Object> query = CustomGlobal.convertToQuery(config.getFields(), req, options.getComponentName());
 				return coll.findOne(new BasicDBObject(query));
 			}
