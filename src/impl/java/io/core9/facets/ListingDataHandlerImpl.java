@@ -55,7 +55,7 @@ public class ListingDataHandlerImpl implements ListingDataHandler<ContentDataHan
 			@SuppressWarnings("unchecked")
 			@Override
 			public Map<String, Object> handle(Request req) {
-				Map<String,Object> result = new HashMap<String, Object>(1);
+                Map<String,Object> result = new HashMap<String, Object>(1);
 				Map<String,Deque<String>> params = req.getQueryParams();
 				int page = 1;
 				if(params.size() > 0) {
@@ -96,7 +96,7 @@ public class ListingDataHandlerImpl implements ListingDataHandler<ContentDataHan
 				result.put("facets", getFacet(listing, params));
 				result.put("total", config.getPager().retrieveNumberOfPages(index));
 				result.put("page", page);
-				putCustomVariablesOnContext(req, listing);
+				putCustomVariablesOnContext(req, listing, page);
 				return result;
 			}
 			
@@ -151,7 +151,7 @@ public class ListingDataHandlerImpl implements ListingDataHandler<ContentDataHan
 				return coll.findOne(new BasicDBObject(query));
 			}
 
-			private void putCustomVariablesOnContext(Request req, DBObject content) {
+			private void putCustomVariablesOnContext(Request req, DBObject content, int page) {
 				if(config.getCustomVariables() != null) {
 					for(CustomVariable var : config.getCustomVariables()) {
 						if(var.isManual()) {
@@ -161,6 +161,8 @@ public class ListingDataHandlerImpl implements ListingDataHandler<ContentDataHan
 						}
 					}
 				}
+                String url = ((String) content.get("title")).toLowerCase().replace(' ', '-').replaceAll("[^a-z0-9\\-]+","");
+                req.getResponse().addGlobal("canonical", "/list/" + url + "/" + content.get("_id") + (page > 0 ? "page=" + page : ""));
 			}
 
 			@Override
