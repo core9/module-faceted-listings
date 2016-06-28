@@ -162,7 +162,7 @@ public class ListingDataHandlerImpl implements ListingDataHandler<ContentDataHan
 					}
 				}
                 String url = ((String) content.get("title")).toLowerCase().replace(' ', '-').replaceAll("[^a-z0-9\\-]+","");
-                req.getResponse().addGlobal("canonical", "/list/" + url + "/" + content.get("_id") + (page > 0 ? "page=" + page : ""));
+                req.getResponse().addGlobal("canonical", "/list/" + url + "/" + content.get("_id") + (page > 1 ? "?page=" + page : ""));
 			}
 
 			@Override
