@@ -96,6 +96,15 @@ public class ListingDataHandlerImpl implements ListingDataHandler<ContentDataHan
 				result.put("facets", getFacet(listing, params));
 				result.put("total", config.getPager().retrieveNumberOfPages(index));
 				result.put("page", page);
+                String pathParams = "";
+                for(Map.Entry<String, Deque<String>> param : params.entrySet()) {
+                    if(!param.getKey().equals("page")) {
+                        for(String value : param.getValue()) {
+                            pathParams += param.getKey() + '=' + value;
+                        }
+                    }
+                }
+                result.put("path", pathParams);
 				putCustomVariablesOnContext(req, listing, page);
 				return result;
 			}
