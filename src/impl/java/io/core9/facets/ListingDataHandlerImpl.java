@@ -94,7 +94,8 @@ public class ListingDataHandlerImpl implements ListingDataHandler<ContentDataHan
 				result.put("products", resultProducts);
 				result.put("content", listing);
 				result.put("facets", getFacet(listing, params));
-				result.put("total", config.getPager().retrieveNumberOfPages(index));
+                int total = config.getPager().retrieveNumberOfPages(index);
+				result.put("total", total);
 				result.put("page", page);
                 String pathParams = "";
                 boolean isFirst = true;
