@@ -97,10 +97,15 @@ public class ListingDataHandlerImpl implements ListingDataHandler<ContentDataHan
 				result.put("total", config.getPager().retrieveNumberOfPages(index));
 				result.put("page", page);
                 String pathParams = "";
+                boolean isFirst = true;
                 for(Map.Entry<String, Deque<String>> param : params.entrySet()) {
                     if(!param.getKey().equals("page")) {
                         for(String value : param.getValue()) {
+                            if(!isFirst) {
+                                pathParams += '&';
+                            }
                             pathParams += param.getKey() + '=' + value;
+                            isFirst = false;
                         }
                     }
                 }
