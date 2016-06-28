@@ -110,7 +110,7 @@ public class ListingDataHandlerImpl implements ListingDataHandler<ContentDataHan
                     }
                 }
                 result.put("path", pathParams);
-				putCustomVariablesOnContext(req, listing, page);
+				putCustomVariablesOnContext(req, listing, page, total);
 				return result;
 			}
 			
@@ -165,7 +165,7 @@ public class ListingDataHandlerImpl implements ListingDataHandler<ContentDataHan
 				return coll.findOne(new BasicDBObject(query));
 			}
 
-			private void putCustomVariablesOnContext(Request req, DBObject content, int page) {
+			private void putCustomVariablesOnContext(Request req, DBObject content, int page, int total) {
 				if(config.getCustomVariables() != null) {
 					for(CustomVariable var : config.getCustomVariables()) {
 						if(var.isManual()) {
@@ -179,7 +179,13 @@ public class ListingDataHandlerImpl implements ListingDataHandler<ContentDataHan
                 if(url == null) {
                     url = ((String) content.get("title")).toLowerCase().replace(' ', '-').replaceAll("[^a-z0-9\\-]+", "");
                 }
+                if(page > 1) {
+                    req.getResponse().addGlobal("prev", "/list/" + url + "/" + content.get("_id") + "?page=" + (page - 1));
+                }
                 req.getResponse().addGlobal("canonical", "/list/" + url + "/" + content.get("_id") + (page > 1 ? "?page=" + page : ""));
+                if(page < total) {
+                    req.getResponse().addGlobal("next", "/list/" + url + "/" + content.get("_id") + "?page=" + (page + 1));
+                }
 			}
 
 			@Override
